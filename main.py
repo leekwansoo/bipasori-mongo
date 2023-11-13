@@ -36,6 +36,8 @@ async def read_user(name: str):
     # make dictionary type data for name (mongodb 에서 data 를 dict 형태로 받음)
     print(data)
     user = await user_collection.find_one(data)
+    if not user:
+        return f"{name} does not exist"
     print(user)
 
     user = {"name": user['name'], "age": user['age']}
@@ -50,6 +52,8 @@ async def create_user(user:User):
     data = {"name": user.name, "age": user.age}
     # mongodb 에서 data 를 dict 형태로 받음
     result = await user_collection.insert_one(data)
+    if not result:
+        return f"{user} addition failed"
     print(result)
 
     return f"{user.name} created..."
@@ -57,9 +61,13 @@ async def create_user(user:User):
 
 @app.delete("/user/{name}")  # mongodb 에서는 _id 값이 objectID 로 자동 생성 되어 복잡하여 _id 값을 name 으로 대치하였음
 async def delete_users(name: str):
+    data = {"name": name}
+    result = await user_collection.find_one(data)
+    if not result:
+        return f"{name} does not exist"
     result = await user_collection.delete_one({"name": name})
     print(result)
-    return f"{result}"
+    return f"{name} deleted..."
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
